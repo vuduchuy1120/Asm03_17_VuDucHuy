@@ -1,0 +1,155 @@
+﻿@model IEnumerable<Asm03_17_VuDucHuy.Models.Post>
+
+@{
+	ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+	<a asp-action="Create">Create New</a>
+</p>
+<div class="container">
+	<div class="form-group">
+		<input type="text" class="form-control" name="search" id="searchString" placeholder="Search" />
+		<input type="hidden" id="totalPage" />
+	</div>
+
+	<button type="button" id="btnSearch" class="btn btn-primary">Search</button>
+</div>
+<table class="table">
+	<thead>
+		<tr>
+			<th>
+				@Html.DisplayNameFor(model => model.First().CreatedDate)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.First().UpdateDate)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.First().Title)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.First().Content)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.First().PublishStatus)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.First().Author)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.First().Category)
+			</th>
+			<th></th>
+		</tr>
+	</thead>
+	<tbody id="tableBody">
+	</tbody>
+</table>
+<div class="container">
+	<button class="btn btn-primary" id="btnPre">Pre</button>
+	<input type="text" readonly="true" value="1" id="pageIndex" />
+	<button class="btn btn-primary" id="btnNext">Next</button>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+<script>
+	// Update the form action when the search input changes
+	$('#btnSearch').on('click', function () {
+		var searchString = $('#searchString').val();
+		console.log(searchString);
+
+		var tr = '';
+		$.ajax({
+			url: '/Posts/SearchPosts',
+			method: 'POST',
+			data: { searchString: searchString },
+			success: function (result) {
+				$('#totalPage').val(result.totalPage);
+				$.each(result.posts, function (k, v) {
+					tr += `<tr>
+										<td> ${v.createdDate}</td>
+										<td> ${v.updateDate}</td>
+										<td> ${v.title}</td>
+										<td> ${v.content}</td>
+										<td> ${v.publishStatus}</td>
+										<td> ${v.authorName}</td>
+										<td> ${v.categoryName}</td>
+										<td>
+											<a href='../Posts/Edit?id=${v.postId}'>Edit </a> |
+											<a href='../Posts/Details?id=${v.postId}'>Details</a> |
+											<a href='../Posts/Delete?id=${v.postId}'>Delete</a>
+										</td>
+										</tr>`;
+				});
+				$("#tableBody").html(tr);
+			},
+			error: function (error) {
+				console.log(error);
+			}
+		});
+	});
+	function handlerPaginate(pageIndex, searchString) {
+		var tr = '';
+		$.ajax({
+			url: '/Posts/SearchPosts',
+			method: 'POST',
+			data: {
+				searchString: searchString,
+				pageIndex: pageIndex
+			},
+			success: function (result) {
+				console.log(result);
+				console.log(pageIndex, searchString);
+				$('#totalPage').val(result.totalPage);
+
+				$.each(result.posts, function (k, v) {
+
+					tr += `<tr>
+												<td> ${v.createdDate}</td>
+												<td> ${v.updateDate}</td>
+												<td> ${v.title}</td>
+												<td> ${v.content}</td>
+												<td> ${v.publishStatus}</td>
+												<td> ${v.authorName}</td>
+												<td> ${v.categoryName}</td>
+												<td>
+													<a href='../Posts/Edit?id=${v.postId}'>Edit </a> |
+													<a href='../Posts/Details?id=${v.postId}'>Details</a> |
+													<a href='../Posts/Delete?id=${v.postId}'>Delete</a>
+												</td>
+												</tr>`;
+				});
+				$("#tableBody").html(tr);
+			},
+			error: function (error) {
+				console.log(error);
+			}
+		});
+	}
+	$('#btnPre').addClass("disabled");
+	$('#btnPre').on('click', function () {
+		const pageIndex = $('#pageIndex').val() - 1;
+		$('#btnNext').removeClass("disabled");
+		if (pageIndex == 1) {
+			$('#btnPre').addClass("disabled");
+		}
+		const searchString = $('#searchString').val();
+		handlerPaginate(pageIndex, searchString);
+		$('#pageIndex').val(pageIndex);
+	});
+	$('#btnNext').on('click', function () {
+		const pageIndex = parseInt($('#pageIndex').val()) + 1;
+		if (pageIndex == $('#totalPage').val()) {
+			$('#btnNext').addClass("disabled");
+		}
+		$('#btnPre').removeClass("disabled");
+		const searchString = $('#searchString').val();
+		handlerPaginate(pageIndex, searchString);
+		$('#pageIndex').val(pageIndex);
+	});
+
+
+</script>
